@@ -77,7 +77,7 @@ def qdrant_search(query, collection_name, filter_dict,k,with_source):
 
     client = QdrantClient("localhost", prefer_grpc=True)
     embeddings = CohereEmbeddings(model="multilingual-22-12", cohere_api_key=cohere_api_key)
-    if with_source:
+    if with_source=="True":
         docs = test_similarity_search(query=query, k=k, filter=filter_dict, embedding_func=embeddings.embed_query, collection_name=collection_name,client=client)
         chain = load_qa_with_sources_chain(OpenAI(temperature=0,openai_api_key=openai_api_key), chain_type="stuff")
         result = chain({"input_documents": docs, "question": query}, return_only_outputs=False)
