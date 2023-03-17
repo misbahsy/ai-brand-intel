@@ -8,7 +8,7 @@ CORS(app)
 
 @app.route('/')
 def hello_world():
-    return '<p>Hello, World!</p>'
+    return {"Hello":"World"}
 
 @app.route('/embed', methods=['POST'])
 def embed():
@@ -30,10 +30,21 @@ def search():
     k = request.json.get("k")
     with_source = request.json.get("with_source")
 
-    search_result = qdrant_search(query, collection_name, filter_dict,k,with_source)
+    search_result = qdrant_search_completion(query, collection_name, filter_dict,k,with_source)
     json_result = parse_result(search_result)
     return json_result
 
+@app.route('/vsearch', methods=['POST'])
+def vector_search():
+    query = request.json.get("query")
+    collection_name = request.json.get("collection_name")
+    filter_dict = request.json.get("filter_dict")
+    k = request.json.get("k")
+    with_source = request.json.get("with_source")
+
+    search_result = qdrant_search_vectors(query, collection_name, filter_dict,k,with_source)
+    json_docs_result = parse_docs(search_result)
+    return json_docs_result
 
 
 # if __name__ == '__main__':

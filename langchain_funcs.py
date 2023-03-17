@@ -72,8 +72,7 @@ def generate_embeddings(scope, department, userid, filetype, **kwargs):
 
 
 
-def qdrant_search(query, collection_name, filter_dict,k,with_source):
-
+def qdrant_search_completion(query, collection_name, filter_dict,k,with_source):
 
     client = QdrantClient("localhost", prefer_grpc=True)
     embeddings = CohereEmbeddings(model="multilingual-22-12", cohere_api_key=cohere_api_key)
@@ -87,6 +86,25 @@ def qdrant_search(query, collection_name, filter_dict,k,with_source):
     result = chain({"input_documents": docs, "question": query}, return_only_outputs=False)    
     return result
 
+def qdrant_search_vectors(query, collection_name, filter_dict,k,with_source):
+
+    client = QdrantClient("localhost", prefer_grpc=True)
+    embeddings = CohereEmbeddings(model="multilingual-22-12", cohere_api_key=cohere_api_key)
+    if with_source=="True":
+        docs = test_similarity_search(query=query, k=k, filter=filter_dict, embedding_func=embeddings.embed_query, collection_name=collection_name,client=client)
+        return docs
+    docs = test_similarity_search(query=query, k=3, filter=filter_dict, embedding_func=embeddings.embed_query, collection_name=collection_name,client=client)
+    return docs
+
+def parse_docs(docs):
+    resp_doc = []
+    for doc in docs:
+        resp_dict = {}
+        resp_dict['page_content'] = doc.page_content
+        for key, value in doc.metadata.items():
+            resp_dict[f'{key}']= value 
+        resp_doc.append(resp_dict)
+    return {"resp_doc":resp_doc}
     
 def parse_result(answer):
     question = answer['question']
