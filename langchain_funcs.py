@@ -6,7 +6,8 @@ from langchain.vectorstores import Qdrant
 from langchain.embeddings import CohereEmbeddings
 from langchain.chains import VectorDBQAWithSourcesChain, VectorDBQA
 from langchain import OpenAI
-from langchain.chains.qa_with_sources import load_qa_with_sources_chain, load_qa_chain
+from langchain.chains.qa_with_sources import load_qa_with_sources_chain
+from langchain.chains.question_answering import load_qa_chain
 from qdrant_client import QdrantClient
 from langchain.docstore.document import Document
 from qdrant_func import *
@@ -69,20 +70,33 @@ def generate_embeddings(scope, department, userid, filetype, **kwargs):
 
     return qdrant.collection_name
 
-# def search_with_sources(qdrant, query, sources):
-#     embeddings = CohereEmbeddings(model="multilingual-22-12", cohere_api_key=cohere_api_key)
-#     qa_chain = load_qa_with_sources_chain(OpenAI(temperature=0, openai_api_key=openai_api_key), chain_type="stuff")
-#     chain = VectorDBQAWithSourcesChain(combine_documents_chain=qa_chain, vectorstore=qdrant, return_source_documents=sources)
-#     answer_w_sources = chain({"question": query}, return_only_outputs=True)
-#     return answer_w_sources
 
 
-def qdrant_search(query, collection_name, filter_dict,k,with_score):
+def qdrant_search(query, collection_name, filter_dict,k,with_source):
+
 
     client = QdrantClient("localhost", prefer_grpc=True)
     embeddings = CohereEmbeddings(model="multilingual-22-12", cohere_api_key=cohere_api_key)
-    if with_score:
-        docs = test_similarity_search_with_score(query=query, k=k, filter=filter_dict, embedding_func=embeddings.embed_query, collection_name=collection_name,client=client)
-        return docs
+    if with_source:
+        docs = test_similarity_search(query=query, k=k, filter=filter_dict, embedding_func=embeddings.embed_query, collection_name=collection_name,client=client)
+        chain = load_qa_with_sources_chain(OpenAI(temperature=0,openai_api_key=openai_api_key), chain_type="stuff")
+        result = chain({"input_documents": docs, "question": query}, return_only_outputs=False)
+        return result
     docs = test_similarity_search(query=query, k=3, filter=filter_dict, embedding_func=embeddings.embed_query, collection_name=collection_name,client=client)
-    return docs
+    chain = load_qa_chain(OpenAI(temperature=0,openai_api_key=openai_api_key), chain_type="stuff")
+    result = chain({"input_documents": docs, "question": query}, return_only_outputs=False)    
+    return result
+
+    
+def parse_result(answer):
+    question = answer['question']
+    output_text = answer['output_text']
+    input_documents = answer['input_documents']
+    resp = []
+    for doc in input_documents:
+        resp_dict = {}
+        resp_dict['page_content'] = doc.page_content
+        for key, value in doc.metadata.items():
+            resp_dict[f'{key}']= value 
+        resp.append(resp_dict)
+    return {"question":question, "output_text":output_text, "resp":resp}

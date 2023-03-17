@@ -1,16 +1,12 @@
 from langchain.docstore.document import Document
 from operator import itemgetter
 
+
 content_payload_key = "page_content"
 metadata_payload_key = "metadata"
 
-def test_similarity_search(
-        query,
-        k,
-        filter,
-        **kwargs
-    ):
-        results = test_similarity_search_with_score(query, k, filter)
+def test_similarity_search(query,k,filter,embedding_func, collection_name, client,**kwargs):
+        results = test_similarity_search_with_score(query, k, filter,embedding_func, collection_name, client)
         return list(map(itemgetter(0), results))
 
 def test_similarity_search_with_score(query, k, filter, embedding_func, collection_name, client):
