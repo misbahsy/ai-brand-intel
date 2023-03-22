@@ -53,3 +53,18 @@ def test_qdrant_filter_from_dict(filter):
             for key, value in filter.items()
         ]
     )
+
+def delete_from_client(filter, collection_name, client):
+    from qdrant_client.http import models
+    if test_qdrant_filter_from_dict(filter) is None:
+        deletion_status = client.delete_collection(
+        collection_name=collection_name
+        )
+        return deletion_status
+    deletion_status = client.delete(
+        collection_name=collection_name,
+        points_selector=models.FilterSelector(
+            filter=test_qdrant_filter_from_dict(filter),
+        ),
+    )
+    return deletion_status.status.COMPLETED=='completed'

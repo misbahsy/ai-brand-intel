@@ -22,7 +22,7 @@ cohere_api_key = os.environ.get('cohere_api_key')
 
 def download_file(url, user_id):
     # Path to the local mounted folder on the Azure VM
-    folder_path = f'/home/azureuser/mydrive/{user_id}/'
+    folder_path = f'/home/azureuser/mydrive/user_files/{user_id}/'
 
     # Create the folder if it doesn't exist
     os.makedirs(folder_path, exist_ok=True)
@@ -95,6 +95,12 @@ def qdrant_search_vectors(query, collection_name, filter_dict,k,with_source):
         return docs
     docs = test_similarity_search(query=query, k=3, filter=filter_dict, embedding_func=embeddings.embed_query, collection_name=collection_name,client=client)
     return docs
+
+def qdrant_delete_vectors(collection_name, filter_dict):
+
+    client = QdrantClient("localhost", prefer_grpc=True)
+    deletion_status= delete_from_client(client=client, collection_name=collection_name, filter=filter_dict)
+    return deletion_status
 
 def parse_docs(docs):
     resp_doc = []

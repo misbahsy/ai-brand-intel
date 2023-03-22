@@ -46,6 +46,13 @@ def vector_search():
     json_docs_result = parse_docs(search_result)
     return json_docs_result
 
+@app.route('/delvec', methods=['POST'])
+def delete_vector():
+    collection_name = request.json.get("collection_name")
+    filter_dict = request.json.get("filter_dict")
+
+    deletion_status = qdrant_delete_vectors(collection_name=collection_name, filter_dict=filter_dict)
+    return ({"deletion_status":deletion_status})
 
 # if __name__ == '__main__':
 #     app.run(debug=True, host='0.0.0.0')
